@@ -1,7 +1,7 @@
-<project basedir="." default="war" name="q-rest-cart">
+<project basedir="." default="war" name="q-rest-customer">
 
     <property name="debuglevel" value="source,lines,vars"/>
-    <property name="compiler.args.q-rest-cart" value="-encoding UTF-8 -source 11 -target 11 ${compiler.args}"/>
+    <property name="compiler.args.q-rest-customer" value="-encoding UTF-8 -source 11 -target 11 ${compiler.args}"/>
 
     <path id="library.jboss.classpath">
         <pathelement location="/opt/wildfly/modules/system/layers/base/javax/annotation/api/main/jboss-annotations-api_1.3_spec-2.0.1.Final.jar"/>
@@ -56,7 +56,7 @@
 
     <target name="war" depends="build-project">
         <echo message="${ant.project.name}: ${ant.file}"/>
-        <war destfile="build/dist/q-rest-cart.war" webxml="WebContent/WEB-INF/web.xml">
+        <war destfile="build/dist/q-rest-customer.war" webxml="WebContent/WEB-INF/web.xml">
             <fileset dir="WebContent"/>
             <classes dir="build/classes"/>
         </war>
