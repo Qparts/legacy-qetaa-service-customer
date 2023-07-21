@@ -31,7 +31,7 @@ public class CustomerAddress implements Serializable{
 	private String line2;
 	@Column(name="city_id")
 	private int cityId;
-	@Column(name="ZIP")
+	@Column(name="zip")
 	private String zipCode;
 	@Column(name="created")
 	@Temporal(TemporalType.TIMESTAMP)
