@@ -1035,6 +1035,7 @@ public class CustomerService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response emailLogin(EmailAccess map) {
 		try {
+			System.out.println("Received  at email login");
 			// already authenticated in facebook
 			WebApp webApp = getWebAppFromSecret(map.getAppSecret());
 			if (map.getEmail() == null) {
