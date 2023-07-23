@@ -262,6 +262,7 @@ public class DAO {
 	public <T> List<T> getFourConditionsAndDateBefore(Class<T> klass, String columnName, String columnName2,
 			String columnName3, String columnName4, String dateColumn, Object val, Object val2, Object val3,
 			Object val4, Date dateVal) {
+
 		Query q = em.createQuery("SELECT b FROM " + klass.getSimpleName() + " b WHERE b." + columnName + " = :value"
 				+ " AND b." + columnName2 + "= :value2" + " AND b." + columnName3 + "= :value3" + " AND b."
 				+ columnName4 + "= :value4" + " AND b." + dateColumn + " > :value5");
@@ -294,9 +295,9 @@ public class DAO {
 	private void setParameter(Query q, String name, Object val) {
 		if (val instanceof Date) {
 			Date d = (Date) val;
-			Calendar c = Calendar.getInstance();
-			c.setTime(d);
-			q.setParameter(name, c, TemporalType.TIMESTAMP);
+//			Calendar c = Calendar.getInstance();
+//			c.setTime(d);
+			q.setParameter(name, d, TemporalType.TIMESTAMP);
 		} else if (val instanceof Calendar) {
 			Calendar c = (Calendar) val;
 			q.setParameter(name, c, TemporalType.TIMESTAMP);

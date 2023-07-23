@@ -873,15 +873,23 @@ public class CustomerService {
 	public Response matchToken(AccessMap usermap) {
 		try {
 			WebApp webApp = getWebAppFromSecret(usermap.getAppSecret());
+			System.out.println("Matching token in customer service: ");
+			System.out.println("Secret " +usermap.getAppSecret());
+			System.out.println("Username " +usermap.getUsername());
+			System.out.println("code " +usermap.getCode());
+			System.out.println("Language " +usermap.getLanguage());
 			List<AccessToken> l = dao.getFourConditionsAndDateBefore(AccessToken.class, "customerId", "webApp.appCode",
 					"status", "token", "expire", Long.parseLong(usermap.getUsername()), webApp.getAppCode(), 'A',
 					usermap.getCode(), new Date());
 			if (!l.isEmpty()) {
+				System.out.println("Found Token");
 				return Response.status(200).build();
 			} else {
+				System.out.println("No token matched");
 				return Response.status(403).build();// forbidden response
 			}
 		} catch (Exception e) {
+			System.out.println("An Error occured in matching oken");
 			return Response.status(403).build();// unauthorized
 		}
 	}
@@ -1035,7 +1043,6 @@ public class CustomerService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response emailLogin(EmailAccess map) {
 		try {
-			System.out.println("Received  at email login");
 			// already authenticated in facebook
 			WebApp webApp = getWebAppFromSecret(map.getAppSecret());
 			if (map.getEmail() == null) {
