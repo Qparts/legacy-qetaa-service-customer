@@ -411,7 +411,7 @@ public class CustomerService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCustomerHitActivities(@PathParam(value = "param") long customerId) {
 		try {
-			String sql = "select * from cst_hit_activity_group where customer = " + customerId + " or visit_index in ("
+			String sql = "select * from cst_hit_activity where customer = " + customerId + " or visit_index in ("
 					+ "  select visit_index from cst_customer_visit_index where customer_id = " + customerId
 					+ ") order by created";
 			List<HitActivity> uniqueHits = dao.getNative(HitActivity.class, sql);
@@ -457,7 +457,7 @@ public class CustomerService {
 			to.setTime(cTo.getTimeInMillis());
 
 			Helper h = new Helper();
-			String sql = "select * from cst_hit_activity_group where created between '" + h.getDateFormat(from)
+			String sql = "select * from cst_hit_activity where created between '" + h.getDateFormat(from)
 					+ "' and '" + h.getDateFormat(to) + "' order by created";
 			List<HitActivity> uniqueHits = dao.getNative(HitActivity.class, sql);
 			List<HitActivityGroup> groups = new ArrayList<>();
