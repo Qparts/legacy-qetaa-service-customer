@@ -20,6 +20,7 @@ public class DAO {
 	
 	@SuppressWarnings("unchecked")
 	public <T> T findJPQLParams(Class<T> klass, String jpql, Object ... vals){
+		try {
 		Query q = em.createQuery(jpql);
 		int i = 0;
 		for(Object o : vals){
@@ -27,6 +28,9 @@ public class DAO {
 			i++;
 		}
 		return (T) q.getSingleResult();
+		}catch(NoResultException ex) {
+			return null;
+		}
 	}
 
 	public <T> List<T> get(Class<T> klass) {
@@ -48,8 +52,9 @@ public class DAO {
 		return (List<T>) q.getResultList();
 	}
 
-	public List getNative(Class klass, String sql) {
-		return em.createNativeQuery(sql, klass).getResultList();
+	@SuppressWarnings("unchecked")
+	public <T> List<T> getNative(Class<T> klass, String sql) {
+		return (List<T>) em.createNativeQuery(sql, klass).getResultList();
 	}
 
 	public List getNative(String sql) {
@@ -262,7 +267,6 @@ public class DAO {
 	public <T> List<T> getFourConditionsAndDateBefore(Class<T> klass, String columnName, String columnName2,
 			String columnName3, String columnName4, String dateColumn, Object val, Object val2, Object val3,
 			Object val4, Date dateVal) {
-
 		Query q = em.createQuery("SELECT b FROM " + klass.getSimpleName() + " b WHERE b." + columnName + " = :value"
 				+ " AND b." + columnName2 + "= :value2" + " AND b." + columnName3 + "= :value3" + " AND b."
 				+ columnName4 + "= :value4" + " AND b." + dateColumn + " > :value5");
@@ -288,7 +292,7 @@ public class DAO {
 			Date d = (Date) val;
 			Calendar c = Calendar.getInstance();
 			c.setTime(d);
-			q.setParameter(name, c, TemporalType.TIMESTAMP);
+			q.setParameter(name, c.getTime(), TemporalType.TIMESTAMP);
 		}
 	}
 
@@ -298,7 +302,7 @@ public class DAO {
 			q.setParameter(name, d, TemporalType.TIMESTAMP);
 		} else if (val instanceof Calendar) {
 			Calendar c = (Calendar) val;
-			q.setParameter(name, c, TemporalType.TIMESTAMP);
+			q.setParameter(name, c.getTime(), TemporalType.TIMESTAMP);
 		} else {
 			q.setParameter(name, val);
 		}

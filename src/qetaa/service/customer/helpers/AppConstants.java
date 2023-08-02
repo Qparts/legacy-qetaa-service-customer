@@ -3,7 +3,8 @@ package qetaa.service.customer.helpers;
 public final class AppConstants {
 	private final static String USER_SERVICE = "http://localhost:8080/service-qetaa-user/rest/";
 	private final static String QUOTATION_SERVICE = "http://localhost:8080/service-qetaa-quotation/rest/";
-	
+	private final static String WEBSITE_BASE_URL = "http://qtest.fareed9.com/";
+	private final static String PUBLIC_VEHICLE_SERVICE = "http://localhost:8080/service-qetaa-vehicle/rest/api/v1/";
 	public final static String USER_MATCH_TOKEN = USER_SERVICE + "match-token";
 	
 	private static final String SMS_PROVIDER_HOST="https://www.lanasms.net/api/sendsms.php?";
@@ -19,6 +20,11 @@ public final class AppConstants {
 	public final static String PAYFORT_MERCHANT_ID = "";
 	public final static String PAYFORT_CURRENCY = "SAR";
 	
+	public final static String POST_GET_MODEL_YEARS_FROM_IDS = PUBLIC_VEHICLE_SERVICE + "model-year-from-ids";
+		
+	public final static String getChangeEmailActivationLink(String code, String email) {
+		return WEBSITE_BASE_URL + "change-email?code=" + code + "&email=" + email;
+	}
 	
 	public static String getPurchaseId(long cartId){
 		return "PO-" + cartId;

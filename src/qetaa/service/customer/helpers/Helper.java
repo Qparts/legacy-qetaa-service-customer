@@ -9,6 +9,8 @@ import java.util.Date;
 import java.util.Random;
 
 public class Helper {
+	private final static String SALTCHARS = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxuz1234567890";
+	
 	public static int getRandomInteger(int min, int max) {
 		Random random = new Random();
 		return random.nextInt(max - min + 1) + min;
@@ -67,8 +69,17 @@ public class Helper {
 		return shaval;
 	}
 	
+	public static String getRandomSaltString(int length){
+		StringBuilder salt = new StringBuilder();
+		Random rnd = new Random();
+		while (salt.length() < length) { // length of the random string.
+            int index = (int) (rnd.nextFloat() * SALTCHARS.length());
+            salt.append(SALTCHARS.charAt(index));
+        }
+		return salt.toString();
+	}
+	
 	public static String getSaltString() {
-		 String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
 		 StringBuilder salt = new StringBuilder();
 		 Random rnd = new Random();
 		 while (salt.length() < 5) { // length of the random string.
@@ -78,5 +89,78 @@ public class Helper {
 		 String saltStr = salt.toString();
 	     return saltStr;
 	}
+	
+
+	
+	public static String prepareHtmlActivationEmail(String activationLink) {
+		String html = "<div align='cetnter' style='padding:12px'>" + 
+				"        <table width='100%' border='0' cellpadding='0' cellspacing='0' style='font-family:helvetica'>" + 
+				"            <tr>" + 
+				"                <td>" + 
+				"                    <table class='content' style='background-color:#f3f3f3' align='center' cellpadding='0' cellspacing='0' border='0'>" + 
+				"                        <tr>" + 
+				"                            <td>" + 
+				"                                <div style='background-color:#555; color:white;padding:12px'>" + 
+				"									Qetaa.com Account Activation" + 
+				"								</div>" + 
+				"                            </td>" + 
+				"                        </tr>" + 
+				"						<tr>" + 
+				"                            <td>" + 
+				"                                <div style='padding:12px'>" + 
+				"									Your new email request has been requested!" + 
+				"								</div>" + 
+				"                            </td>" + 
+				"                        </tr>" + 
+				"						<tr>" + 
+				"                            <td>" + 
+				"                                <div style='padding:12px'>" + 
+				"									Please verify your new email by clicking on the link below" + 
+				"								</div>" + 
+				"                            </td>" + 
+				"                        </tr>" + 
+				"						<tr>" + 
+				"                            <td>" + 
+				"                                <div style='padding:12px' align='center'>" + 
+				"									<a href='"+activationLink+"'>" + 
+				"										<button  type='button' style='background-color:#ee4036; color:white;border:none;padding:12px'>Click here to verify your new email</button>" + 
+				"									</a>" + 
+				"									<br/>" + 
+				"									<br/>" + 
+				"								</div>" + 
+				"                            </td>" + 
+				"                        </tr>" + 
+				"						<tr>" + 
+				"                            <td>" + 
+				"                                <div style='padding:12px'>" + 
+				"									Or copy and paste this link in your browser" + 
+				"									<br/>" + 
+				"									<a href='"+activationLink+"'>" + 
+														activationLink +
+				"									</a>" + 
+				"									<br/>" + 
+				"									<br/>" + 
+				"								</div>" + 
+				"                            </td>" + 
+				"                        </tr>" + 
+				"						<tr>" + 
+				"                            <td>" + 
+				"                                <div style='padding:12px'>" + 
+				"									Welcome to Qetaa.com!" + 
+				"									<br/>" + 
+				"									<br/>" + 
+				"								</div>" + 
+				"                            </td>" + 
+				"                        </tr>" + 
+				"                    </table>" + 
+				"                </td>" + 
+				"            </tr>" + 
+				"        </table>" + 
+				"		</div>";
+		return html;
+	}
+	
+	
+	
 
 }

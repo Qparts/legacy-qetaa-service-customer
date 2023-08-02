@@ -46,6 +46,8 @@ import qetaa.service.customer.model.security.FacebookAccess;
 import qetaa.service.customer.model.security.WebApp;
 
 @Path("/")
+@Consumes(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
 public class CustomerService {
 	@EJB
 	private DAO dao;
@@ -56,6 +58,12 @@ public class CustomerService {
 	@Secured
 	private void test() {
 
+	}
+	
+	@GET
+	@Path("mytest")
+	public Response tryMe() {
+		return Response.status(200).entity("hala walla").build();
 	}
 
 	private void addLoyaltyPoints(Customer customer) {
@@ -78,6 +86,7 @@ public class CustomerService {
 		}
 	}
 
+	
 	@SecuredUser
 	@GET
 	@Path("customer/{param}")
@@ -135,10 +144,25 @@ public class CustomerService {
 		}
 	}
 
+	@SecuredUser
+	@POST
+	@Path("manual-sms")
+	public Response sendManualSMS(@HeaderParam("Authorization") String authHeader, Map<String,Object> map) {
+		try {
+			String sms = (String) map.get("sms");
+			Long customerId = ((Number) map.get("customerId")).longValue();
+			Customer c = dao.find(Customer.class, customerId);
+			async.sendSms(c.getMobile(), customerId, sms, null, "manual");
+			return Response.status(201).build();
+		}catch(Exception ex) {
+			return Response.status(500).build();
+		}
+	}
+	
+	//moved to new api
 	@ValidApp
 	@POST
 	@Path("reset-sms")
-	@Consumes(MediaType.APPLICATION_JSON)
 	public Response resetSMS(@HeaderParam("Authorization") String authHeader, Map<String, String> map) {
 		try {
 			String mobile = map.get("mobile");
@@ -158,6 +182,7 @@ public class CustomerService {
 		}
 	}
 
+	//moved to new api
 	@ValidApp
 	@POST
 	@Path("register-email")
@@ -411,7 +436,7 @@ public class CustomerService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCustomerHitActivities(@PathParam(value = "param") long customerId) {
 		try {
-			String sql = "select * from cst_hit_activity where customer = " + customerId + " or visit_index in ("
+			String sql = "select * from cst_hit_activity_group where customer = " + customerId + " or visit_index in ("
 					+ "  select visit_index from cst_customer_visit_index where customer_id = " + customerId
 					+ ") order by created";
 			List<HitActivity> uniqueHits = dao.getNative(HitActivity.class, sql);
@@ -457,7 +482,7 @@ public class CustomerService {
 			to.setTime(cTo.getTimeInMillis());
 
 			Helper h = new Helper();
-			String sql = "select * from cst_hit_activity where created between '" + h.getDateFormat(from)
+			String sql = "select * from cst_hit_activity_group where created between '" + h.getDateFormat(from)
 					+ "' and '" + h.getDateFormat(to) + "' order by created";
 			List<HitActivity> uniqueHits = dao.getNative(HitActivity.class, sql);
 			List<HitActivityGroup> groups = new ArrayList<>();
@@ -829,12 +854,15 @@ public class CustomerService {
 			String cartId = map.get("cartId");
 			String purpose = map.get("purpose");
 			Customer c = dao.find(Customer.class, Long.parseLong(cId));
-			text = text + generateCodeLogin(Long.valueOf(cId), Long.valueOf(cartId));
-			if (c.getCountryId() == 1) {
-				this.async.sendSms(c.getMobile(), c.getId(), text, cartId, purpose);
-			} else {
-				this.async.sendEmail(c.getEmail(), "الطلب رقم " + cartId, text);
+			if(!c.getSmsInactive()) {
+				text = text + generateCodeLogin(Long.valueOf(cId), Long.valueOf(cartId));
+				if (c.getCountryId() == 1) {
+					this.async.sendSms(c.getMobile(), c.getId(), text, cartId, purpose);
+				} else {
+					this.async.sendEmail(c.getEmail(), "الطلب رقم " + cartId, text);
+				}
 			}
+			
 			return Response.status(200).build();
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -853,11 +881,15 @@ public class CustomerService {
 			String cartId = map.get("cartId");
 			String purpose = map.get("purpose");
 			Customer c = dao.find(Customer.class, Long.parseLong(cId));
-			if (c.getCountryId() == 1) {
-				this.async.sendSms(c.getMobile(), c.getId(), text, cartId, purpose);
-			} else {	
-				this.async.sendEmail(c.getEmail(), "الطلب رقم " + cartId, text);
+			
+			if(!c.getSmsInactive()) {
+				if (c.getCountryId() == 1) {
+					this.async.sendSms(c.getMobile(), c.getId(), text, cartId, purpose);
+				} else {	
+					this.async.sendEmail(c.getEmail(), "الطلب رقم " + cartId, text);
+				}
 			}
+			
 			return Response.status(200).build();
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -883,6 +915,35 @@ public class CustomerService {
 			}
 		} catch (Exception e) {
 			return Response.status(403).build();// unauthorized
+		}
+	}
+	
+	@ValidApp
+	@POST
+	@Path("mobile-register")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response mobileRegister(EmailAccess eaccess) {
+		try {
+			CustomerAccess access = new CustomerAccess();
+			Customer c = new Customer();
+			c.setCreated(new Date());
+			c.setEmail(eaccess.getEmail().trim().toLowerCase());
+			c.setFirstName(eaccess.getFirstName());
+			c.setLastName(eaccess.getLastName());
+			c.setPassword(Helper.cypher(eaccess.getPassword()));
+			c.setCountryId(eaccess.getCountryId());
+			c.setMobile(Helper.getFullMobile(eaccess.getMobile().trim(), "966"));
+			c.setStatus('V');
+			c.setSmsInactive(false);
+			c.setCreatedBy(eaccess.getCreatedBy());
+			c = dao.persistAndReturn(c);
+			access.setCustomer(c);
+			String token = issueToken(c, getWebAppFromSecret(eaccess.getAppSecret()), 60);
+			access.setToken(token);
+			return Response.status(200).entity(access).build();
+		} catch (Exception ex) {
+			return Response.status(500).build();
 		}
 	}
 
@@ -912,34 +973,7 @@ public class CustomerService {
 		}
 	}
 
-	@ValidApp
-	@POST
-	@Path("mobile-register")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response mobileRegister(EmailAccess eaccess) {
-		try {
-			CustomerAccess access = new CustomerAccess();
-			Customer c = new Customer();
-			c.setCreated(new Date());
-			c.setEmail(eaccess.getEmail().trim().toLowerCase());
-			c.setFirstName(eaccess.getFirstName());
-			c.setLastName(eaccess.getLastName());
-			c.setPassword(Helper.cypher(eaccess.getPassword()));
-			c.setCountryId(eaccess.getCountryId());
-			c.setMobile(Helper.getFullMobile(eaccess.getMobile().trim(), "966"));
-			c.setStatus('V');
 
-			c.setCreatedBy(eaccess.getCreatedBy());
-			c = dao.persistAndReturn(c);
-			access.setCustomer(c);
-			String token = issueToken(c, getWebAppFromSecret(eaccess.getAppSecret()), 60);
-			access.setToken(token);
-			return Response.status(200).entity(access).build();
-		} catch (Exception ex) {
-			return Response.status(500).build();
-		}
-	}
 
 	@ValidApp
 	@POST
@@ -957,6 +991,7 @@ public class CustomerService {
 			c.setMobile(Helper.getFullMobile(map.getMobile().trim(), map.getCountryCode()));
 			c.setStatus('V');// verified
 			c.setCountryId(map.getCountryId());
+			c.setSmsInactive(false);
 			c = dao.persistAndReturn(c);
 			// sendVerificationEmail(c);
 			createFacebookProfile(map, c);
@@ -989,7 +1024,9 @@ public class CustomerService {
 			c.setMobile(Helper.getFullMobile(map.getMobile().trim(), map.getCountryCode()));
 			c.setStatus('V');
 			c.setCreatedBy(map.getCreatedBy());
+			c.setSmsInactive(false);
 			c = dao.persistAndReturn(c);
+			
 			access.setCustomer(c);
 			String token = issueToken(c, getWebAppFromSecret(map.getAppSecret()), 60);
 			access.setToken(token);
@@ -1026,6 +1063,11 @@ public class CustomerService {
 		}
 
 	}
+	
+	
+	
+	
+	
 
 	// password is not encrypted
 	@ValidApp
@@ -1033,15 +1075,14 @@ public class CustomerService {
 	@Path("email-login")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response emailLogin(EmailAccess map) {
+	public Response emailLogin(@HeaderParam("Authorization") String authHeader, EmailAccess map) {
 		try {
 			// already authenticated in facebook
-			WebApp webApp = getWebAppFromSecret(map.getAppSecret());
+			WebApp webApp = this.getWebAppFromAuthHeader(authHeader);
 			if (map.getEmail() == null) {
 				map.setEmail("");
 			}
-
-			String jpql = "select b from Customer b where (email = :value0 or mobile = :value1) and password = :value2";
+			String jpql = "select b from Customer b where (b.email = :value0 or b.mobile = :value1) and b.password = :value2";			
 			List<Customer> list = dao.getJPQLParams(Customer.class, jpql, map.getEmail().trim().toLowerCase(),
 					Helper.getFullMobile(map.getEmail().trim(), "966"), map.getPassword());
 			if (list.isEmpty()) {
@@ -1130,6 +1171,25 @@ public class CustomerService {
 			CustomerAddress address = dao.find(CustomerAddress.class, addressId);
 			return Response.status(200).entity(address).build();
 		} catch (Exception ex) {
+			return Response.status(500).build();
+		}
+	}
+	
+	@SecuredUser
+	@POST
+	@Path("addresses/carts")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response getAddressesFromCarts(List<Long> addressIds) {
+		try {
+			String sql = "select * from cst_customer_address where id in (0";
+			for(Long id : addressIds) {
+				sql = sql + "," + id;
+			}
+			sql = sql + ")";
+			List<CustomerAddress> addresses = dao.getNative(CustomerAddress.class, sql);
+			return Response.status(200).entity(addresses).build();
+		}catch(Exception ex) {
 			return Response.status(500).build();
 		}
 	}
@@ -1264,7 +1324,7 @@ public class CustomerService {
 			return Response.status(500).build();
 		}
 	}
-
+	//moved to new api
 	private void createFacebookProfile(FacebookAccess map, Customer c) {
 		FacebookProfile fb = new FacebookProfile();
 		fb.setCustomer(c);

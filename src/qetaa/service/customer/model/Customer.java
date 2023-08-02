@@ -47,12 +47,24 @@ public class Customer implements Serializable {
 	private int createdBy;
 	@Column(name="country_id")
 	private Integer countryId;
+	@Column(name="default_lang")
+	private String defaultLang;
+	@Column(name="sms_inactive")
+	@JsonIgnore
+	private Boolean smsInactive;
 	
 	@Transient
 	private List<LoyaltyPoints> loyaltyPoints;
 	
 	
 	
+	
+	public String getDefaultLang() {
+		return defaultLang;
+	}
+	public void setDefaultLang(String defaultLang) {
+		this.defaultLang = defaultLang;
+	}
 	public Integer getCountryId() {
 		return countryId;
 	}
@@ -120,6 +132,13 @@ public class Customer implements Serializable {
 	}
 	public void setCreated(Date created) {
 		this.created = created;
+	}
+	
+	public Boolean getSmsInactive() {
+		return smsInactive;
+	}
+	public void setSmsInactive(Boolean smsInactive) {
+		this.smsInactive = smsInactive;
 	}
 	@Override
 	public int hashCode() {

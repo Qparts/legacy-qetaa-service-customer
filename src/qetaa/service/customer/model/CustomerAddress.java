@@ -38,6 +38,20 @@ public class CustomerAddress implements Serializable{
 	private Date created;
 	@Column(name="created_by")
 	private Integer createdBy;
+	@Column(name="status")
+	private Character status;//A = active, I = archived
+	@Column(name="latitude")
+	private Double latitude;
+	@Column(name="longitude")
+	private Double longitude;
+	@Column(name="title")
+	private String title;
+	
+	public CustomerAddress() {
+		
+	}
+
+	
 	public long getAddressId() {
 		return addressId;
 	}
@@ -85,6 +99,35 @@ public class CustomerAddress implements Serializable{
 	}
 	public void setCreatedBy(Integer created_by) {
 		this.createdBy = created_by;
+	}
+	
+	
+	
+	
+	
+	public Character getStatus() {
+		return status;
+	}
+	public void setStatus(Character status) {
+		this.status = status;
+	}
+	public Double getLatitude() {
+		return latitude;
+	}
+	public void setLatitude(Double latitude) {
+		this.latitude = latitude;
+	}
+	public Double getLongitude() {
+		return longitude;
+	}
+	public void setLongitude(Double longitude) {
+		this.longitude = longitude;
+	}
+	public String getTitle() {
+		return title;
+	}
+	public void setTitle(String title) {
+		this.title = title;
 	}
 	@Override
 	public int hashCode() {
